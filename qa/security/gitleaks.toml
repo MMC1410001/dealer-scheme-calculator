@@ -1,0 +1,15 @@
+# gitleaks settings for qa/security/run_scans.sh (scan "secrets"): the default rules, plus an allowlist for the
+# PUBLISHED local example values only. They are in .env.example and the QA suites on purpose, and the server refuses
+# them outside APP_ENV=local (docs/api-contract.md section 3.4). Never add a real secret here.
+title = "scheme-calculator gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Published local example credentials (local-client / local-test-secret, local-only JWT key)"
+regexes = [
+  '''local-test-secret''',
+  '''local-only-jwt-signing-key-not-for-servers-0001''',
+  '''0b1f90b824765bd860b58a3ebc0396a4f6f4c4ad8f1eed10135c0cb6cf3bd171''',
+]

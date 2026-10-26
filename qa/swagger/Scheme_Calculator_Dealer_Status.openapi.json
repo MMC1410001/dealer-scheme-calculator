@@ -1,0 +1,1717 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Scheme Calculator - Dealer scheme status API",
+    "version": "1.3.0",
+    "description": "POST {dealer_code, scheme_tags} returns the stored scheme status of one dealer: slabs with LOCKED / UNLOCKED, gift and CN, for Festive Bonanza (FB-PAN, FB-TNHPJK) and Star Points (SP-Q3). Server-to-server only (no CORS).\n\n**Try it:** select a server, click **Authorize** and enter your client_id and client_secret (OAuth2 client credentials; Local: local-client / local-test-secret). Swagger gets a Bearer token from POST /api/v1/auth/token and sends it on every call. Then click **Try it out** on the request and select an example. Examples named `invalid_*` must return 400; the other examples return 200.\n\nFull guide: docs/API_GUIDE.md in the repository."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3400",
+      "description": "Local (qa/README.md Step 1)"
+    },
+    {
+      "url": "https://dev.scheme-calculator.example.com",
+      "description": "Dev"
+    }
+  ],
+  "tags": [
+    {
+      "name": "auth"
+    },
+    {
+      "name": "dealer-status"
+    },
+    {
+      "name": "reward-choice"
+    },
+    {
+      "name": "embed"
+    },
+    {
+      "name": "health"
+    }
+  ],
+  "paths": {
+    "/api/v1/dealer-scheme-status": {
+      "post": {
+        "tags": [
+          "dealer-status"
+        ],
+        "operationId": "getDealerSchemeStatus",
+        "summary": "Scheme status of one dealer",
+        "description": "Returns one SchemeStatus for each requested tag, in request order. A child dealer code returns the parent's result (dealer_code in the response is the parent code). Order of checks: 503 API_DISABLED, 429 (per IP), 413 (declared Content-Length), 401 / 403 (token), 429 (per client), 400 INVALID_REQUEST / 413 (streamed body), response cache, 400 UNKNOWN_SCHEME_TAG, 404, 200.",
+        "security": [
+          {
+            "OAuth2ClientCredentials": [
+              "schemes:read"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusRequest"
+              },
+              "examples": {
+                "valid_three_tags": {
+                  "summary": "Dealer and three tags",
+                  "value": {
+                    "dealer_code": "DEMO0001",
+                    "scheme_tags": [
+                      "FB-PAN",
+                      "FB-TNHPJK",
+                      "SP-Q3"
+                    ]
+                  }
+                },
+                "valid_two_tags": {
+                  "summary": "Two tags (response keeps this order)",
+                  "value": {
+                    "dealer_code": "DEMO0001",
+                    "scheme_tags": [
+                      "FB-PAN",
+                      "FB-TNHPJK"
+                    ]
+                  }
+                },
+                "valid_child_dealer": {
+                  "summary": "Child dealer (returns the parent result)",
+                  "value": {
+                    "dealer_code": "DEMO-C1",
+                    "scheme_tags": [
+                      "FB-PAN"
+                    ]
+                  }
+                },
+                "invalid_empty_tags": {
+                  "summary": "Not valid: no tags (400)",
+                  "value": {
+                    "dealer_code": "DEMO0001",
+                    "scheme_tags": []
+                  }
+                },
+                "invalid_duplicate_tags": {
+                  "summary": "Not valid: duplicate tags (400)",
+                  "value": {
+                    "dealer_code": "DEMO0001",
+                    "scheme_tags": [
+                      "FB-PAN",
+                      "FB-PAN"
+                    ]
+                  }
+                },
+                "invalid_dealer_code": {
+                  "summary": "Not valid: characters not allowed (400)",
+                  "value": {
+                    "dealer_code": "1' OR '1'='1",
+                    "scheme_tags": [
+                      "FB-PAN"
+                    ]
+                  }
+                },
+                "invalid_missing_dealer_code": {
+                  "summary": "Not valid: no dealer_code (400)",
+                  "value": {
+                    "scheme_tags": [
+                      "FB-PAN"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dealer status. No wrapper.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Cache": {
+                "$ref": "#/components/headers/XCache"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                },
+                "example": {
+                  "dealer_code": "DEMO0001",
+                  "dealer_name": "Demo Dealer 01 FB-PAN circular example (Slab 1)",
+                  "data_as_of": "2026-10-15T00:00:00+05:30",
+                  "schemes": [
+                    {
+                      "header": {
+                        "metrics": [
+                          {
+                            "key": "oct_gsr",
+                            "unit": "INR",
+                            "label": "Oct'26 GSR",
+                            "value": 160000
+                          },
+                          {
+                            "key": "nov_gsr",
+                            "unit": "INR",
+                            "label": "Nov'26 GSR",
+                            "value": 200000
+                          },
+                          {
+                            "key": "period_gsr",
+                            "unit": "INR",
+                            "label": "GSR Oct + Nov'26",
+                            "value": 360000
+                          },
+                          {
+                            "key": "growth_pct",
+                            "unit": "PERCENT",
+                            "label": "Growth",
+                            "value": 20
+                          }
+                        ],
+                        "to_date": "2026-11-30",
+                        "from_date": "2026-10-01",
+                        "scheme_name": "Festive Bonanza Oct-Nov'26 (Pan India except TNN, TNS, HP & JK)",
+                        "q1_monthly_avg_gsr": 150000
+                      },
+                      "details": [
+                        {
+                          "gift": {
+                            "value": 5000,
+                            "description": "Gold Voucher (Jeweller A / Jeweller B / reputed brand)"
+                          },
+                          "slab": "Slab 1",
+                          "slab_no": 1,
+                          "conditions": [
+                            {
+                              "key": "period_gsr",
+                              "met": true,
+                              "label": "GSR Oct + Nov'26",
+                              "actual": 360000,
+                              "required": 250000
+                            },
+                            {
+                              "key": "min_first_month_gsr",
+                              "met": true,
+                              "label": "Min GSR in Oct'26",
+                              "actual": 160000,
+                              "required": 100000
+                            },
+                            {
+                              "key": "growth_pct",
+                              "met": true,
+                              "label": "Growth over Q1 monthly avg",
+                              "actual": 20,
+                              "required": 20
+                            }
+                          ],
+                          "lock_status": "UNLOCKED",
+                          "cn_alternative": 4500
+                        },
+                        {
+                          "gift": {
+                            "value": 8000,
+                            "description": "Gold Voucher (Jeweller A / Jeweller B / reputed brand)"
+                          },
+                          "slab": "Slab 2",
+                          "slab_no": 2,
+                          "conditions": [
+                            {
+                              "key": "period_gsr",
+                              "met": false,
+                              "label": "GSR Oct + Nov'26",
+                              "actual": 360000,
+                              "required": 400000
+                            },
+                            {
+                              "key": "min_first_month_gsr",
+                              "met": true,
+                              "label": "Min GSR in Oct'26",
+                              "actual": 160000,
+                              "required": 150000
+                            },
+                            {
+                              "key": "growth_pct",
+                              "met": true,
+                              "label": "Growth over Q1 monthly avg",
+                              "actual": 20,
+                              "required": 20
+                            }
+                          ],
+                          "lock_status": "LOCKED",
+                          "cn_alternative": 7200
+                        },
+                        {
+                          "gift": {
+                            "value": 12000,
+                            "description": "Gold Voucher (Jeweller A / Jeweller B / reputed brand)"
+                          },
+                          "slab": "Slab 3",
+                          "slab_no": 3,
+                          "conditions": [
+                            {
+                              "key": "period_gsr",
+                              "met": false,
+                              "label": "GSR Oct + Nov'26",
+                              "actual": 360000,
+                              "required": 600000
+                            },
+                            {
+                              "key": "min_first_month_gsr",
+                              "met": false,
+                              "label": "Min GSR in Oct'26",
+                              "actual": 160000,
+                              "required": 250000
+                            },
+                            {
+                              "key": "growth_pct",
+                              "met": true,
+                              "label": "Growth over Q1 monthly avg",
+                              "actual": 20,
+                              "required": 15
+                            }
+                          ],
+                          "lock_status": "LOCKED",
+                          "cn_alternative": 10800
+                        },
+                        {
+                          "gift": {
+                            "value": 18000,
+                            "description": "Gold Voucher (Jeweller A / Jeweller B / reputed brand)"
+                          },
+                          "slab": "Slab 4",
+                          "slab_no": 4,
+                          "conditions": [
+                            {
+                              "key": "period_gsr",
+                              "met": false,
+                              "label": "GSR Oct + Nov'26",
+                              "actual": 360000,
+                              "required": 800000
+                            },
+                            {
+                              "key": "min_first_month_gsr",
+                              "met": false,
+                              "label": "Min GSR in Oct'26",
+                              "actual": 160000,
+                              "required": 300000
+                            },
+                            {
+                              "key": "growth_pct",
+                              "met": true,
+                              "label": "Growth over Q1 monthly avg",
+                              "actual": 20,
+                              "required": 15
+                            }
+                          ],
+                          "lock_status": "LOCKED",
+                          "cn_alternative": 16200
+                        },
+                        {
+                          "gift": {
+                            "value": 24000,
+                            "description": "Gold Voucher (Jeweller A / Jeweller B / reputed brand)"
+                          },
+                          "slab": "Slab 5",
+                          "slab_no": 5,
+                          "conditions": [
+                            {
+                              "key": "period_gsr",
+                              "met": false,
+                              "label": "GSR Oct + Nov'26",
+                              "actual": 360000,
+                              "required": 1000000
+                            },
+                            {
+                              "key": "min_first_month_gsr",
+                              "met": false,
+                              "label": "Min GSR in Oct'26",
+                              "actual": 160000,
+                              "required": 400000
+                            },
+                            {
+                              "key": "growth_pct",
+                              "met": true,
+                              "label": "Growth over Q1 monthly avg",
+                              "actual": 20,
+                              "required": 15
+                            }
+                          ],
+                          "lock_status": "LOCKED",
+                          "cn_alternative": 21600
+                        },
+                        {
+                          "gift": {
+                            "value": 30000,
+                            "description": "Gold Voucher (Jeweller A / Jeweller B / reputed brand)"
+                          },
+                          "slab": "Slab 6",
+                          "slab_no": 6,
+                          "conditions": [
+                            {
+                              "key": "period_gsr",
+                              "met": false,
+                              "label": "GSR Oct + Nov'26",
+                              "actual": 360000,
+                              "required": 1200000
+                            },
+                            {
+                              "key": "min_first_month_gsr",
+                              "met": false,
+                              "label": "Min GSR in Oct'26",
+                              "actual": 160000,
+                              "required": 500000
+                            },
+                            {
+                              "key": "growth_pct",
+                              "met": true,
+                              "label": "Growth over Q1 monthly avg",
+                              "actual": 20,
+                              "required": 10
+                            }
+                          ],
+                          "lock_status": "LOCKED",
+                          "cn_alternative": 27000
+                        },
+                        {
+                          "gift": {
+                            "value": 40000,
+                            "description": "Gold Voucher (Jeweller A / Jeweller B / reputed brand)"
+                          },
+                          "slab": "Slab 7",
+                          "slab_no": 7,
+                          "conditions": [
+                            {
+                              "key": "period_gsr",
+                              "met": false,
+                              "label": "GSR Oct + Nov'26",
+                              "actual": 360000,
+                              "required": 1500000
+                            },
+                            {
+                              "key": "min_first_month_gsr",
+                              "met": false,
+                              "label": "Min GSR in Oct'26",
+                              "actual": 160000,
+                              "required": 600000
+                            },
+                            {
+                              "key": "growth_pct",
+                              "met": true,
+                              "label": "Growth over Q1 monthly avg",
+                              "actual": 20,
+                              "required": 10
+                            }
+                          ],
+                          "lock_status": "LOCKED",
+                          "cn_alternative": 36000
+                        }
+                      ],
+                      "final_on": "2026-12-31",
+                      "od_status": "PENDING",
+                      "scheme_tag": "FB-PAN",
+                      "provisional": true,
+                      "current_slab": "Slab 1",
+                      "participation": "IN_SCHEME",
+                      "benefit_blocked": false,
+                      "current_slab_no": 1
+                    },
+                    {
+                      "reason": "Dealer region is not in the scope of this scheme.",
+                      "scheme_tag": "FB-TNHPJK",
+                      "reason_code": "REGION_NOT_IN_SCOPE",
+                      "participation": "NOT_IN_SCOPE"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request not valid, or unknown scheme tag. The UNKNOWN_SCHEME_TAG message names the first unknown tag only when the tag matches ^[A-Za-z0-9_-]{1,32}$. Otherwise the message is \"A scheme tag does not exist.\" (the input is never repeated). With the cache on, UNKNOWN_SCHEME_TAG is cached and has X-Cache. INVALID_REQUEST is not cached and has no X-Cache.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "invalid": {
+                    "value": {
+                      "error": {
+                        "code": "INVALID_REQUEST",
+                        "message": "scheme_tags must have 10 items or fewer."
+                      }
+                    }
+                  },
+                  "duplicate": {
+                    "value": {
+                      "error": {
+                        "code": "INVALID_REQUEST",
+                        "message": "scheme_tags must be unique. FB-PAN is in the list more than once."
+                      }
+                    }
+                  },
+                  "contentType": {
+                    "value": {
+                      "error": {
+                        "code": "INVALID_REQUEST",
+                        "message": "Content-Type must be application/json."
+                      }
+                    }
+                  },
+                  "unknownTag": {
+                    "value": {
+                      "error": {
+                        "code": "UNKNOWN_SCHEME_TAG",
+                        "message": "Scheme tag ABC9 does not exist."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Cache": {
+                "$ref": "#/components/headers/XCache"
+              }
+            }
+          },
+          "401": {
+            "description": "Token missing, not valid or expired.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "missing": {
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Not authenticated"
+                      }
+                    }
+                  },
+                  "invalid": {
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Invalid token"
+                      }
+                    }
+                  },
+                  "expired": {
+                    "value": {
+                      "error": {
+                        "code": "UNAUTHORIZED",
+                        "message": "Token expired"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "WWW-Authenticate": {
+                "$ref": "#/components/headers/WWWAuthenticateBearer"
+              }
+            }
+          },
+          "403": {
+            "description": "Valid token without the schemes:read scope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "scope": {
+                    "value": {
+                      "error": {
+                        "code": "INSUFFICIENT_SCOPE",
+                        "message": "Insufficient scope"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "WWW-Authenticate": {
+                "description": "Bearer realm=\"scheme-calculator\", error=\"insufficient_scope\", scope=\"schemes:read\"",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Dealer not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "notFound": {
+                    "value": {
+                      "error": {
+                        "code": "DEALER_NOT_FOUND",
+                        "message": "Dealer D99999 does not exist."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Cache": {
+                "$ref": "#/components/headers/XCache"
+              }
+            }
+          },
+          "413": {
+            "description": "Request body larger than 8 KB (declared Content-Length or streamed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "tooLarge": {
+                    "value": {
+                      "error": {
+                        "code": "PAYLOAD_TOO_LARGE",
+                        "message": "The request body must be 8192 bytes or smaller."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit used: per client IP (RATE_LIMIT_PER_SECOND, default 2,500 a second) or per client_id (API_RATE_LIMIT_PER_MINUTE, default 1,00,000 a minute).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "limited": {
+                    "value": {
+                      "error": {
+                        "code": "RATE_LIMITED",
+                        "message": "Too many requests. Wait and try again."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error. No detail in the body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "internal": {
+                    "value": {
+                      "error": {
+                        "code": "INTERNAL_ERROR",
+                        "message": "Internal error. Try again later."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "503": {
+            "description": "API disabled on this server (auth settings refused), or no free database connection (retry after Retry-After seconds).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "disabled": {
+                    "value": {
+                      "error": {
+                        "code": "API_DISABLED",
+                        "message": "The API is not enabled on this server."
+                      }
+                    }
+                  },
+                  "busy": {
+                    "value": {
+                      "error": {
+                        "code": "SERVICE_BUSY",
+                        "message": "Service busy. Try again in a few seconds."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "dealer-status"
+        ],
+        "operationId": "dealerSchemeStatusMethodNotAllowed",
+        "summary": "Not allowed (also HEAD, PUT, PATCH, DELETE)",
+        "description": "TRACE and other methods that are not GET, HEAD, POST, PUT, PATCH, DELETE or OPTIONS also get 405 METHOD_NOT_ALLOWED with Allow: POST, from the method guard (src/server/method-guard.ts).",
+        "responses": {
+          "405": {
+            "description": "Method not allowed.",
+            "headers": {
+              "Allow": {
+                "$ref": "#/components/headers/Allow"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "notAllowed": {
+                    "value": {
+                      "error": {
+                        "code": "METHOD_NOT_ALLOWED",
+                        "message": "Method not allowed. Use POST."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "getAccessToken",
+        "summary": "Get an access token (OAuth2 client credentials)",
+        "description": "Exchange client_id and client_secret for a Bearer token valid for 1 hour. Send grant_type=client_credentials form-encoded (RFC 6749) or as a JSON object of strings, with the client credentials in HTTP Basic auth or as client_id and client_secret in the body (not both). Reuse the token until it expires. This endpoint has its own, much lower, rate limit (TOKEN_RATE_LIMIT_PER_MINUTE per client IP, default 30). Errors use the RFC 6749 format.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              },
+              "example": {
+                "grant_type": "client_credentials",
+                "client_id": "local-client",
+                "client_secret": "local-test-secret"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              },
+              "example": {
+                "grant_type": "client_credentials",
+                "client_id": "local-client",
+                "client_secret": "local-test-secret"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                },
+                "example": {
+                  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.…",
+                  "token_type": "Bearer",
+                  "expires_in": 3600,
+                  "scope": "schemes:read"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request not valid.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "invalidRequest": {
+                    "value": {
+                      "error": "invalid_request",
+                      "error_description": "grant_type is required"
+                    }
+                  },
+                  "repeated": {
+                    "value": {
+                      "error": "invalid_request",
+                      "error_description": "A parameter was sent more than once"
+                    }
+                  },
+                  "contentType": {
+                    "value": {
+                      "error": "invalid_request",
+                      "error_description": "Send application/x-www-form-urlencoded or application/json"
+                    }
+                  },
+                  "grantType": {
+                    "value": {
+                      "error": "unsupported_grant_type",
+                      "error_description": "Only client_credentials is supported"
+                    }
+                  },
+                  "scope": {
+                    "value": {
+                      "error": "invalid_scope",
+                      "error_description": "The only scope is schemes:read"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Client authentication failed.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              },
+              "WWW-Authenticate": {
+                "$ref": "#/components/headers/WWWAuthenticateBasic"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "invalidClient": {
+                    "value": {
+                      "error": "invalid_client",
+                      "error_description": "Client authentication failed"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              },
+              "Allow": {
+                "$ref": "#/components/headers/Allow"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "notAllowed": {
+                    "value": {
+                      "error": "invalid_request",
+                      "error_description": "Method not allowed. Use POST."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body larger than 8 KB.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "tooLarge": {
+                    "value": {
+                      "error": "invalid_request",
+                      "error_description": "The request body must be 8192 bytes or smaller."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many token requests from this IP. Reuse the token.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "limited": {
+                    "value": {
+                      "error": "rate_limited",
+                      "error_description": "Too many requests. Wait and try again."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "internal": {
+                    "value": {
+                      "error": "server_error",
+                      "error_description": "Internal error. Try again later."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "API disabled on this server (auth settings refused).",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "disabled": {
+                    "value": {
+                      "error": "temporarily_unavailable",
+                      "error_description": "The API is not enabled on this server."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "tokenMethodNotAllowed",
+        "summary": "Not allowed (also HEAD, PUT, PATCH, DELETE)",
+        "security": [],
+        "responses": {
+          "405": {
+            "description": "Method not allowed.",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Pragma": {
+                "$ref": "#/components/headers/Pragma"
+              },
+              "Allow": {
+                "$ref": "#/components/headers/Allow"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthError"
+                },
+                "examples": {
+                  "notAllowed": {
+                    "value": {
+                      "error": "invalid_request",
+                      "error_description": "Method not allowed. Use POST."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "operationId": "health",
+        "summary": "Health probe (no authentication, no dealer data, never rate limited)",
+        "responses": {
+          "200": {
+            "description": "Database answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                },
+                "example": {
+                  "status": "ok",
+                  "data_as_of": "2026-10-15T00:00:00+05:30"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database does not answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                },
+                "example": {
+                  "status": "unavailable",
+                  "data_as_of": null
+                }
+              }
+            }
+          }
+        },
+        "description": "Readiness probe: checks the database. 200 only when the server and the database work; 503 when the database does not answer. data_as_of is kept for 15 s. HEAD on the same path gives the same status with no body (for load balancers)."
+      }
+    }
+  },
+  "components": {
+    "headers": {
+      "Allow": {
+        "schema": {
+          "type": "string"
+        },
+        "example": "POST"
+      },
+      "CacheControl": {
+        "schema": {
+          "type": "string",
+          "enum": [
+            "no-store"
+          ]
+        }
+      },
+      "Pragma": {
+        "schema": {
+          "type": "string",
+          "enum": [
+            "no-cache"
+          ]
+        }
+      },
+      "RequestId": {
+        "description": "Request ID for support. Also in the server log.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "RetryAfter": {
+        "description": "Seconds to wait before the next try.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "WWWAuthenticateBasic": {
+        "description": "Only when the request sent an Authorization header (HTTP Basic client authentication, RFC 6749 section 5.2). With client_id and client_secret in the body, a 401 has no challenge, so a browser opens no sign-in dialog.",
+        "schema": {
+          "type": "string"
+        },
+        "example": "Basic realm=\"scheme-calculator\""
+      },
+      "WWWAuthenticateBearer": {
+        "description": "Bearer challenge (RFC 6750).",
+        "schema": {
+          "type": "string"
+        },
+        "example": "Bearer realm=\"scheme-calculator\", error=\"invalid_token\", error_description=\"Invalid token\""
+      },
+      "XCache": {
+        "description": "Only when the response cache is on (CACHE_ENABLED=true and REDIS_URL set). HIT: from Redis. MISS: from the database, now cached. BYPASS: Redis not available, answered from the database.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "HIT",
+            "MISS",
+            "BYPASS"
+          ]
+        }
+      }
+    },
+    "schemas": {
+      "Condition": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "required",
+          "actual",
+          "met"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "period_gsr",
+              "min_first_month_gsr",
+              "growth_pct",
+              "points"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "required": {
+            "type": "number"
+          },
+          "actual": {
+            "type": "number",
+            "nullable": true
+          },
+          "met": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "INVALID_REQUEST",
+                  "UNKNOWN_SCHEME_TAG",
+                  "DEALER_NOT_FOUND",
+                  "UNAUTHORIZED",
+                  "RATE_LIMITED",
+                  "METHOD_NOT_ALLOWED",
+                  "API_DISABLED",
+                  "INTERNAL_ERROR",
+                  "INSUFFICIENT_SCOPE",
+                  "PAYLOAD_TOO_LARGE",
+                  "SERVICE_BUSY",
+                  "NOT_FOUND",
+                  "CHOICE_NOT_ALLOWED"
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ExtraBenefit": {
+        "type": "object",
+        "required": [
+          "description",
+          "extra_tickets",
+          "extra_ticket_cn_value",
+          "cn_option_value"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string",
+            "enum": [
+              "CRUISE",
+              "OVERSEAS"
+            ],
+            "nullable": true,
+            "description": "Trip destination of the rule (added 22-10-2026; missing in results stored before the next engine run)."
+          },
+          "extra_tickets": {
+            "type": "integer"
+          },
+          "extra_ticket_cn_value": {
+            "type": "number"
+          },
+          "cn_option_value": {
+            "type": "number"
+          }
+        }
+      },
+      "Gift": {
+        "type": "object",
+        "required": [
+          "description",
+          "value"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number",
+            "nullable": true,
+            "description": "INR. Null for trips."
+          }
+        }
+      },
+      "Header": {
+        "type": "object",
+        "required": [
+          "scheme_name",
+          "from_date",
+          "to_date",
+          "q1_monthly_avg_gsr",
+          "metrics"
+        ],
+        "properties": {
+          "scheme_name": {
+            "type": "string"
+          },
+          "from_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "to_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "q1_monthly_avg_gsr": {
+            "type": "number",
+            "description": "Q1 FY 2026-27 GSR / 3, INR."
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Metric"
+            }
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "required": [
+          "status",
+          "data_as_of"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "unavailable"
+            ]
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "Metric": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "value",
+          "unit"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Read by key, not by position. See docs/api-contract.md 5.3."
+          },
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "INR",
+              "PERCENT",
+              "POINTS"
+            ]
+          }
+        }
+      },
+      "OAuthError": {
+        "type": "object",
+        "required": [
+          "error",
+          "error_description"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "invalid_request",
+              "invalid_client",
+              "unsupported_grant_type",
+              "invalid_scope",
+              "rate_limited",
+              "temporarily_unavailable",
+              "server_error"
+            ]
+          },
+          "error_description": {
+            "type": "string"
+          }
+        }
+      },
+      "RewardChoice": {
+        "type": "object",
+        "required": [
+          "choice",
+          "destination",
+          "source",
+          "chosen_by",
+          "updated_at"
+        ],
+        "description": "The dealer's saved reward choice for the scheme.",
+        "properties": {
+          "choice": {
+            "type": "string",
+            "enum": [
+              "GIFT",
+              "CN"
+            ],
+            "description": "GIFT = the slab gift (gold voucher or trip). CN = the slab CN alternative."
+          },
+          "destination": {
+            "type": "string",
+            "enum": [
+              "CRUISE",
+              "OVERSEAS"
+            ],
+            "nullable": true,
+            "description": "Star Points: destination of the extra tickets above the top slab. Only for a dealer in Slab 7. Null = not chosen or not applicable."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "UPLOAD",
+              "API",
+              "DEMO"
+            ],
+            "nullable": true,
+            "description": "Where the choice came from: ADMIN (one choice entered on the admin dealer page), UPLOAD (admin file upload), API (this API), DEMO (test data)."
+          },
+          "chosen_by": {
+            "type": "string",
+            "nullable": true,
+            "description": "Admin-area user name, or chosen_by of the API."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time of the last change (IST, +05:30)."
+          }
+        }
+      },
+      "SchemeStatus": {
+        "type": "object",
+        "required": [
+          "scheme_tag",
+          "participation"
+        ],
+        "properties": {
+          "scheme_tag": {
+            "type": "string"
+          },
+          "participation": {
+            "type": "string",
+            "enum": [
+              "IN_SCHEME",
+              "NOT_IN_SCOPE"
+            ]
+          },
+          "reason_code": {
+            "type": "string",
+            "enum": [
+              "REGION_NOT_IN_SCOPE",
+              "REGION_UNKNOWN",
+              "ENROLLED_IN_OTHER_SCHEME",
+              "NO_DATA",
+              "SLAB1_PERIOD_GSR_NOT_MET",
+              "SLAB1_MIN_FIRST_MONTH_GSR_NOT_MET",
+              "SLAB1_GROWTH_NOT_MET",
+              "SLAB1_POINTS_NOT_MET",
+              "OD_ON_CHECK_DATE"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "header": {
+            "$ref": "#/components/schemas/Header"
+          },
+          "provisional": {
+            "type": "boolean"
+          },
+          "final_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "current_slab": {
+            "type": "string",
+            "nullable": true
+          },
+          "current_slab_no": {
+            "type": "integer",
+            "nullable": true
+          },
+          "benefit_blocked": {
+            "type": "boolean"
+          },
+          "od_status": {
+            "type": "string",
+            "enum": [
+              "NO_OD",
+              "OD",
+              "PENDING"
+            ]
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SlabStatus"
+            }
+          },
+          "extra_benefits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExtraBenefit"
+            }
+          },
+          "reward_choice": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RewardChoice"
+              }
+            ],
+            "nullable": true,
+            "description": "IN_SCHEME only. The saved reward choice. Null = not chosen."
+          }
+        }
+      },
+      "SlabStatus": {
+        "type": "object",
+        "required": [
+          "slab",
+          "slab_no",
+          "lock_status",
+          "gift",
+          "cn_alternative",
+          "conditions"
+        ],
+        "properties": {
+          "slab": {
+            "type": "string"
+          },
+          "slab_no": {
+            "type": "integer"
+          },
+          "lock_status": {
+            "type": "string",
+            "enum": [
+              "UNLOCKED",
+              "LOCKED"
+            ],
+            "description": "UNLOCKED only for the slab that the dealer is in (current_slab_no). All other slabs, also the lower slabs, are LOCKED."
+          },
+          "gift": {
+            "$ref": "#/components/schemas/Gift"
+          },
+          "cn_alternative": {
+            "type": "number"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          }
+        }
+      },
+      "StatusRequest": {
+        "type": "object",
+        "required": [
+          "dealer_code",
+          "scheme_tags"
+        ],
+        "properties": {
+          "dealer_code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "pattern": "^\\s*[A-Za-z0-9_-]{1,32}\\s*$",
+            "description": "Dealer code. Spaces at the start and the end are removed.",
+            "example": "DEMO0001"
+          },
+          "scheme_tags": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "uniqueItems": true,
+            "description": "Active scheme tags, case-sensitive. Items unique after trimming. The response keeps this order.",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "example": [
+              "FB-PAN",
+              "FB-TNHPJK",
+              "SP-Q3"
+            ]
+          }
+        }
+      },
+      "StatusResponse": {
+        "type": "object",
+        "required": [
+          "dealer_code",
+          "dealer_name",
+          "data_as_of",
+          "schemes"
+        ],
+        "properties": {
+          "dealer_code": {
+            "type": "string",
+            "description": "Parent code when the requested code is a child dealer."
+          },
+          "dealer_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "data_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Time of the data load (IST offset +05:30)."
+          },
+          "schemes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchemeStatus"
+            },
+            "description": "One item for each requested tag, in request order."
+          }
+        }
+      },
+      "TokenRequest": {
+        "type": "object",
+        "required": [
+          "grant_type"
+        ],
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "enum": [
+              "client_credentials"
+            ]
+          },
+          "client_id": {
+            "type": "string",
+            "description": "Leave out when you send HTTP Basic auth."
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "Leave out when you send HTTP Basic auth."
+          },
+          "scope": {
+            "type": "string",
+            "description": "Blank = all scopes that the client may use. Or a space-separated list: schemes:read, choices:write (choices:write only for clients in AUTH_WRITE_CLIENTS)."
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in",
+          "scope"
+        ],
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "JWT (HS256). Send it as Authorization: Bearer <access_token>."
+          },
+          "token_type": {
+            "type": "string",
+            "enum": [
+              "Bearer"
+            ]
+          },
+          "expires_in": {
+            "type": "integer",
+            "description": "Seconds until the token expires.",
+            "example": 3600
+          },
+          "scope": {
+            "type": "string",
+            "description": "Granted scopes, space-separated: schemes:read, and choices:write for a client in AUTH_WRITE_CLIENTS.",
+            "example": "schemes:read"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "OAuth2ClientCredentials": {
+        "type": "oauth2",
+        "description": "Get a token from POST /api/v1/auth/token with your client_id and client_secret, then send `Authorization: Bearer <token>`. Tokens last 1 hour (JWT_TTL_SECONDS). Reuse one until it expires.",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "/api/v1/auth/token",
+            "scopes": {
+              "schemes:read": "Read dealer scheme status",
+              "choices:write": "Save the dealer's reward choice (only clients in AUTH_WRITE_CLIENTS)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

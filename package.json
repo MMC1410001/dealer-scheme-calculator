@@ -1,0 +1,66 @@
+{
+  "name": "scheme-calculator",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "db:seed": "tsx scripts/db-seed.ts",
+    "sync:bigquery": "tsx scripts/sync-bigquery.ts",
+    "engine:run": "tsx scripts/engine-run.ts",
+    "data:demo": "tsx scripts/load-demo-data.ts",
+    "token:sign": "tsx scripts/sign-embed-token.ts",
+    "auth:client": "tsx scripts/auth-client.ts",
+    "auth:jwt-secret": "tsx scripts/auth-jwt-secret.ts",
+    "admin:user": "tsx scripts/admin-user.ts",
+    "openapi:check": "tsx scripts/check-openapi.ts",
+    "qa:postman": "tsx qa/postman/build-collection.ts",
+    "qa:swagger": "tsx qa/swagger/build-specs.ts",
+    "qa:pick-dealers": "tsx qa/test-data/pick-dealers.ts",
+    "qa:scans": "bash qa/security/run_scans.sh",
+    "bq:inspect": "tsx scripts/bq-inspect-schema.ts",
+    "env": "tsx scripts/with-env.ts",
+    "db:cleanup": "tsx scripts/db-cleanup.ts"
+  },
+  "dependencies": {
+    "@google-cloud/bigquery": "^9.3.0",
+    "drizzle-orm": "^0.45.4",
+    "exceljs": "4.4.0",
+    "ioredis": "5.11.1",
+    "jose": "6.2.12",
+    "next": "16.4.2",
+    "pg": "^8.23.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^18.0.8",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.2",
+    "tailwindcss": "^4",
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.12"
+    },
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
+  }
+}

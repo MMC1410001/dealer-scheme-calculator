@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* The iframe is light only: it sits inside the white SAP Commerce / SFA pages. The admin area has a dark theme
+   (class "dark" on the admin root, toggle in the admin header, cookie sc_theme). */
+@theme {
+  --color-brand-green: #00a06a;
+  /* Darker green for text and for white text on green (WCAG AA contrast). */
+  --color-brand-green-dark: #00805a;
+  --color-brand-violet: #6e4bc4;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: #ffffff;
+  color: #111827;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---------- Admin dark theme ----------
+ * Tailwind colours are CSS variables, so the dark theme swaps the grey scale and the light tints in one place.
+ * Rules outside a layer win over the utility layer. text-white stays white (white text on green buttons).
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  color-scheme: dark;
+  --color-gray-50: #0d1117;
+  --color-gray-100: #1b222c;
+  --color-gray-200: #2a323d;
+  --color-gray-300: #3b4450;
+  --color-gray-400: #6e7681;
+  --color-gray-500: #8b949e;
+  --color-gray-600: #a8b1bb;
+  --color-gray-700: #c9d1d9;
+  --color-gray-800: #dde3ea;
+  --color-gray-900: #f0f3f6;
+  --color-amber-50: #2b2111;
+  --color-amber-100: #3a2c12;
+  --color-amber-200: #5a4314;
+  --color-amber-300: #7a5a16;
+  --color-amber-800: #f5c451;
+  --color-amber-900: #fcd879;
+  --color-rose-50: #2c1519;
+  --color-rose-200: #5c2630;
+  --color-rose-600: #f47185;
+  --color-rose-700: #fb8a9c;
+  --color-rose-800: #fda4b2;
+  --color-emerald-50: #0e2a20;
+  --color-emerald-200: #1d5b40;
+  --color-emerald-800: #74e3b5;
+  --color-sky-50: #0c2231;
+  --color-sky-200: #164e6e;
+  --color-sky-800: #8fd6fb;
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-900);
+}
+/* The page behind the admin area (seen when a fast scroll bounces at the top or bottom) has the admin background,
+   so no white strip shows. The iframe keeps the white page. */
+html:has([data-theme-root]),
+html:has([data-theme-root]) body {
+  background-color: var(--color-gray-50);
+}
+html:has([data-theme-root].dark),
+html:has([data-theme-root].dark) body {
+  color-scheme: dark;
+  background-color: #0d1117;
+}
+.dark .bg-white {
+  background-color: #161b22;
+}
+.dark .bg-white\/95 {
+  background-color: rgb(22 27 34 / 0.95);
+}
+.dark .text-brand-green-dark {
+  color: #3fd19b;
+}
+.dark .text-brand-violet {
+  color: #b39dfa;
+}

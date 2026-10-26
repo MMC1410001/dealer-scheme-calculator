@@ -1,0 +1,62 @@
+# OS
+.DS_Store
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+
+# DevOps owns the pipeline: Docker and YAML files stay local, never tracked
+docker-compose*
+compose.y*ml
+Dockerfile*
+.dockerignore
+*.yaml
+*.yml
+
+# Local data
+.data/
+next-env.d.ts
+*.tsbuildinfo
+
+# Reference material and Claude files stay local, never tracked
+context/
+CLAUDE.local.md
+.claude/
+AGENTS.md
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# QA outputs (qa/README.md). Real dealer codes for QA are client data: built by qa/test-data/pick-dealers.ts, never committed.
+qa/test-data/dealers.json
+qa/api-tests/node_modules/
+qa/api-tests/test-results/
+qa/api-tests/playwright-report/
+qa/postman/newman/
+qa/k6/reports/*
+!qa/k6/reports/.gitkeep
+qa/security/reports/*
+!qa/security/reports/.gitkeep
+
+# Generated Word copy of the user guide (source: docs/User_Guide.md)
+docs/User_Guide.docx
+qa/api-tests/playwright-report-ui/

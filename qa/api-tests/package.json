@@ -1,0 +1,23 @@
+{
+  "name": "scheme-calculator-api-tests",
+  "private": true,
+  "description": "Playwright API test suite for the dealer scheme status API (no browsers)",
+  "scripts": {
+    "test": "playwright test",
+    "test:dss": "playwright test tests/dealer_scheme_status.spec.js",
+    "test:common": "playwright test tests/common.spec.js",
+    "test:functional": "playwright test --grep @functional",
+    "test:validation": "playwright test --grep @validation",
+    "test:edge": "playwright test --grep @edge",
+    "test:negative": "playwright test --grep @negative",
+    "test:security": "playwright test --grep @security",
+    "test:auth": "playwright test --grep \"Authentication|Bearer tokens|Token endpoint\"",
+    "test:dev": "API_BASE_URL=https://dev.scheme-calculator.example.com AUTH_ENABLED=true SAMPLE_DATA=false playwright test",
+    "report": "playwright show-report",
+    "test:ui": "playwright test -c playwright.ui.config.js",
+    "test:ui:dev": "UI_BASE_URL=https://dev.scheme-calculator.example.com SAMPLE_DATA=false playwright test -c playwright.ui.config.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
